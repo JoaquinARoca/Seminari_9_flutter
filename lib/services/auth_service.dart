@@ -1,50 +1,44 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
+import 'session_manager.dart';
+import '../models/user.dart';
 
 class AuthService {
-  bool isLoggedIn = false; // Variable para almacenar el estado de autenticación
+  bool get isLoggedIn => SessionManager.currentUser != null;
 
   static String get _baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:9000/api/users';
-    } else if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:9000/api/users';
-    } else {
-      return 'http://localhost:9000/api/users';
-    }
+    if (kIsWeb) return 'http://localhost:9000/api/users';
+    if (Platform.isAndroid) return 'http://10.0.2.2:9000/api/users';
+    return 'http://localhost:9000/api/users';
   }
 
-  //login
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  static String? loggedInUserId; // Variable para almacenar el _id del usuario logueado
+
+  Future<User> login(String email, String password) async {
     final url = Uri.parse('$_baseUrl/login');
+    final resp = await SessionManager.client.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+    );
 
-    final body = json.encode({'email': email, 'password': password});
-
-    try {
-      print("enviant solicitud post a: $url");
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      );
-
-      print("Resposta rebuda amb codi: ${response.statusCode}");
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        return {'error': 'email o contrasenya incorrectes'};
-      }
-    } catch (e) {
-      print("Error al fer la solicitud: $e");
-      return {'error': 'Error de connexió'};
+    if (resp.statusCode == 200) {
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      final user = User.fromJson(data);
+      SessionManager.currentUser = user;
+      loggedInUserId = user.id; // Almacenar el _id del usuario logueado
+      return user;
+    } else if (resp.statusCode == 401) {
+      throw Exception('Credenciales inválidas');
+    } else {
+      throw Exception('Error de login (${resp.statusCode})');
     }
   }
 
   void logout() {
-    isLoggedIn = false; // Cambia el estado de autenticación a no autenticado
-    print("Sessió tancada");
+    SessionManager.currentUser = null;
+    // Opcional: si tu backend soporta /logout por cookies:
+    // SessionManager.client.get(Uri.parse('$_baseUrl/logout'));
   }
 }

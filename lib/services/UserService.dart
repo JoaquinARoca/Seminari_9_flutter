@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'auth_service.dart'; // Importar AuthService para acceder a loggedInUserId
 
 class UserService {
   static String get baseUrl {
@@ -73,6 +74,25 @@ class UserService {
       return true;
     } else {
       throw Exception('Error eliminant usuari: ${response.statusCode}');
+    }
+  }
+
+  static Future<User> verifyPassword() async {
+    final userId = AuthService.loggedInUserId; // Obtener el _id del usuario logueado
+    if (userId == null) {
+      throw Exception('No hay un usuario logueado');
+    }
+
+    final url = Uri.parse('http://localhost:9000/api/users/$userId');
+    final response = await http.get(
+      url,
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body)); // Convertir el JSON en un objeto User
+    } else {
+      throw Exception('Error al obtener el usuario: ${response.statusCode}');
     }
   }
 }

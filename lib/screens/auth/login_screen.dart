@@ -12,40 +12,38 @@ class LoginPage extends StatelessWidget {
 
   void signUserIn(BuildContext context) async {
     final authService = AuthService();
-
-    final email = emailController.text;
-    final password = passwordController.text;
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       _showError(context, 'El email i la contrasenya no poden estar buits.');
       return;
     }
 
-    final result = await authService.login(email, password);
-
-    if (result.containsKey('error')) {
-      _showError(context, result['error']);
-    } else {
+    try {
+      // login lanza excepción si falla
+      await authService.login(email, password);
+      // Al login correcto, vamos al home
       context.go('/');
+    } catch (e) {
+      // Mostramos el mensaje de error
+      _showError(context, e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
   void _showError(BuildContext context, String message) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
+        ],
+      ),
     );
   }
 
@@ -111,6 +109,7 @@ class LoginPage extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 25),
               ],
             ),
           ),

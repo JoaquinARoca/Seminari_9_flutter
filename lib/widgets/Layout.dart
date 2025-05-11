@@ -1,3 +1,5 @@
+// lib/widgets/Layout.dart
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -22,93 +24,83 @@ class LayoutWrapper extends StatelessWidget {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         elevation: 2,
       ),
-      drawer: NavigationDrawer(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.people_alt_rounded,
-                    size: 60,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Flutter Demo App',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimary,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.people_alt_rounded,
+                      size: 60,
+                      color: Colors.white,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Text(
+                      'Flutter Demo App',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          _buildNavItem(
-            context, 
-            'Home', 
-            Icons.home, 
-            '/'),
-          _buildNavItem(
-            context, 
-            'Usuaris', 
-            Icons.info_outline, 
-            '/details'),
-          _buildNavItem(
-            context, 
-            'Crear usuari', 
-            Icons.person_add, 
-            '/editar'),
-          _buildNavItem(
-            context, 
-            'Esborrar usuari', 
-            Icons.delete_outline, 
-            '/borrar'),
-          _buildNavItem(
-            context, 
-            'Perfil', 
-            Icons.account_circle, 
-            '/profile'),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // Load users from the API
-                Provider.of<UserProvider>(context, listen: false).loadUsers();
-                // Close the drawer
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Carregar usuaris'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(45),
+
+            // Navegación
+            _buildNavItem(context, 'Home', Icons.home, '/'),
+            _buildNavItem(context, 'Usuaris', Icons.info_outline, '/details'),
+            _buildNavItem(context, 'Crear usuari', Icons.person_add, '/editar'),
+            _buildNavItem(context, 'Esborrar usuari', Icons.delete_outline, '/borrar'),
+            _buildNavItem(context, 'Perfil', Icons.account_circle, '/profile'),
+
+            const Divider(),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // Recargar usuarios
+                  Provider.of<UserProvider>(context, listen: false).loadUsers();
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Carregar usuaris'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(45),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       body: Container(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.1),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceVariant
+            .withOpacity(0.1),
         child: child,
       ),
     );
   }
 
-  Widget _buildNavItem(BuildContext context, String title, IconData icon, String route) {
-    final bool isSelected = GoRouterState.of(context).uri.toString() == route;
-    
+  Widget _buildNavItem(
+      BuildContext context, String title, IconData icon, String route) {
+    final current = GoRouter.of(context).routerDelegate.currentConfiguration.fullPath;
+    final bool isSelected = current == route;
+
     return ListTile(
       leading: Icon(
-        icon, 
-        color: isSelected 
+        icon,
+        color: isSelected
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.onSurface,
       ),
@@ -116,13 +108,16 @@ class LayoutWrapper extends StatelessWidget {
         title,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected 
+          color: isSelected
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.onSurface,
         ),
       ),
       selected: isSelected,
-      selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+      selectedTileColor: Theme.of(context)
+          .colorScheme
+          .primaryContainer
+          .withOpacity(0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
